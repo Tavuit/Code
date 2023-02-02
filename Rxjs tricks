@@ -1,0 +1,46 @@
+//Use destroy$ in global
+
+@Injectable()
+export class DestroyService
+    extends Subject<void> implements OnDestroy {
+  ngOnDestroy() {
+    this.next();
+    this.complete();
+  }
+}
+
+// use it in a component:
+@Component({
+    providers: [DestroyService],
+})
+export class SomeComponent {
+    constructor(
+        @Inject(DestroyService)
+        private readonly destroy$: DestroyService
+    ) {}
+
+    ngOnInit() {
+        this.some$.pipe(takeUntil(this.destroy$))
+            .subscribe(() => {...});
+    }
+}
+
+//Auto hide error
+@Component({
+  selector: "my-app",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.css"]
+})
+export class AppComponent {
+  private readonly error$ = new Subject<void>();
+  readonly errorShow$ = this.error$.pipe(
+    switchMap(() => merge(of(true), timer(5000).pipe(mapTo(false)))),
+    startWith(false)
+  );
+
+  emulateError() {
+    this.error$.next();
+  }
+}
+
+
